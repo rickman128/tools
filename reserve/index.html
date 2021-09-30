@@ -1,0 +1,237 @@
+<div style="background-color: transparent; font-size: 80%;">
+<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" />
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jqueryui/1/i18n/jquery.ui.datepicker-ja.min.js"></script>
+<!-- <script type="text/javascript" src="//sites.google.com/site/meyoyaku/jquery.timepicker.min.js "></script>
+<link rel="stylesheet" href="//sites.google.com/site/meyoyaku/jquery.timepicker.css" /> -->
+<script type="text/javascript">
+$(function(){
+　$("#datepicker").datepicker({
+          beforeShow: function(input, inst) {
+                var calendar = inst.dpDiv;   // Datepicker
+
+                setTimeout(function() {
+                    calendar.position({
+                        my: 'right top',     // カレンダーの右上
+                        at: 'right bottom',  // 表示対象の右下
+                        of: input            // 対象テキストボックス
+                    });
+                }, 1);
+            }
+  });
+
+  // timepicker test 動かない
+  //$('#timeFrom').timepicker();
+  //$('#timeTo').timepicker();   
+
+  $(function(){
+    $( 'button, input:submit, a', '.jquery-ui-button' ) . button();
+  });
+
+  // 日付
+  // ★動作確認
+  $("#datepiker").blur(function(){
+    clearError();
+    if($(this).val() != ""){
+      if(!chkDate($(this).val())){
+        dispError("日付が正しくありません。");
+      }
+    }
+  });
+  // メールアドレス
+  $("#mail").blur(function(){
+    clearError();
+    if($(this).val() != ""){
+      if (!$(this).val().match(/^([a-zA-Z0-9])+([a-zA-Z0-9\._-])*@([a-zA-Z0-9_-])+([a-zA-Z0-9\._-]+)+$/)){
+        dispError("メールアドレスが正しくありません。");
+      }
+    }
+  });
+  // 開始時間
+  $("#timeFrom").blur(function(){
+    clearError();
+    var time = $(this).val();
+    if(time != ""){
+      if (!$(this).val().match(/^[0-9\:]+$/)){
+        dispError("数字を入力してください。");
+      }
+    }
+  });
+  // 終了時間
+  $("#timeTo").blur(function(){
+    clearError();
+    var time = $(this).val();
+    if(time != ""){
+      if (!$(this).val().match(/^[0-9\:]+$/)){
+        dispError("数字を入力してください。");
+      }
+    }
+  });  
+});
+
+function doAction(event){
+    // 未入力チェック
+    if(($("#datepicker").val() == "") || 
+    ($("#timefrom").val() == "") ||
+    ($("#timeto").val() == "") ||
+    ($("#user").val() == "") ||
+    ($("#mail").val() == "") ||
+    ($("#business").val() == "") ||
+    ($("#system").val() == "")){
+      dispError("全ての項目を入力してください。");
+      $("#reserve" ).effect("shake", "", 500);
+      }
+    else{
+      var param = new Object();
+      var d = document.querySelector('#datepicker').value;
+      var dstr = new Date(d).toString();
+      
+      param['date'] = dstr;
+      param['user'] = document.querySelector('#user').value;
+      param['mail'] = document.querySelector('#mail').value;
+      
+      var t1 = document.querySelector('#timeFrom').value;
+      param['timeFrom'] = t1;
+      
+      var t2 = document.querySelector('#timeTo').value;
+      param['timeTo'] = t2;
+      
+      param['business'] = document.querySelector('#business').value;
+      param['system'] = document.querySelector('#system').value;
+      
+      google.script.run.withSuccessHandler(onSuccess) 
+      .withFailureHandler(onFailure) .checkData(param);
+      document.querySelector('#msg').textContent = '……問い合わせ中……';
+    }
+}
+function onSuccess(result){
+  document.querySelector('#msg').textContent = result;
+}
+function onFailure(error) {
+  dispError(error.message);
+}
+
+// エラー表示
+function dispError(str) {
+    var msg = $("#msg");
+    
+    msg
+        .text(str)
+        .addClass("ui-state-error");
+    setTimeout(function() {
+        msg.removeClass("ui-state-error", 1500);
+    }, 500);
+}
+
+// メッセージクリア
+function clearError(){
+  $("#msg").text("");
+}
+/****************************************************************
+* 機　能： 入力された値が日付でYYYY/MM/DD形式になっているか調べる
+* 引　数： datestr　入力された値
+* 戻り値： true: OK/ false: NG
+****************************************************************/
+function chkDate(datestr) {
+    // 正規表現による書式チェック
+    if(!datestr.match(/^\d{4}\/\d{2}\/\d{2}$/)){
+        return false;
+    }
+    var vYear = datestr.substr(0, 4) - 0;
+    var vMonth = datestr.substr(5, 2) - 1; // Javascriptは、0-11で表現
+    var vDay = datestr.substr(8, 2) - 0;
+    // 月,日の妥当性チェック
+    if(vMonth >= 0 && vMonth <= 11 && vDay >= 1 && vDay <= 31){
+        var vDt = new Date(vYear, vMonth, vDay);
+        if(isNaN(vDt)){
+            return false;
+        }else if(vDt.getFullYear() == vYear && vDt.getMonth() == vMonth && vDt.getDate() == vDay){
+            return true;
+        }else{
+            return false;
+        }
+    }else{
+        return false;
+    }
+}
+       
+</script>
+
+<style>
+<!--
+.ui-datepicker {
+    font-size: 70%;
+}
+.jquery-ui-button div{
+     font-size: 14px;
+     margin: 5px;
+     float: left;
+}
+-->
+</style>
+<p id="msg" style="margin-top: 20px; border: 1px solid transparent; padding: 0.3em;">必ず全項目を入力してください。</p>
+<form>
+<table>
+<tr>
+  <td>日付：</td><td><input type="text" id="datepicker" name="datepicker" maxlength = "10" value=""></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>開始時間：</td><td><input type="text" id="timeFrom" name="timeFrom" class="time" min="10:00" max="16:00" list="timelist" maxlength = "5" value=""></td>
+  <td align="center">～</td>
+  <td>終了時間：</td><td><input type="text" id="timeTo" name="timeTo" class="time" min="10:00" max="16:00" list="timelist" maxlength = "5" value=""></td>
+</tr>
+<tr>
+  <td>業者名：</td><td><input type="text" id="user" name="user"></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>メールアドレス：</td><td><input type="text" id="mail" name="mail" type="email"></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>用件：</td><td><input type="text" id="business" name="business" list="businesslist"></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td>機器名/システム名：</td><td><input type="text" id="system" name="system" ></td>
+  <td></td>
+  <td></td>
+</tr>
+<tr>
+  <td></td>
+  <td></td>
+  <!--<td><input id="reserve" type="button" onclick="doAction(e);" value="予約する"></td>-->
+  <td><div class="jquery-ui-button"><button id="reserve" onclick="doAction(e);">予約する</button></div></td>
+</tr>
+</table>
+</form>
+<datalist id="timelist">
+<option value="10:00"></option>
+<option value="10:30"></option>
+<option value="11:00"></option>
+<option value="11:30"></option>
+<option value="12:00"></option>
+<option value="13:00"></option>
+<option value="13:30"></option>
+<option value="14:00"></option>
+<option value="14:30"></option>
+<option value="15:00"></option>
+<option value="15:30"></option>
+<option value="16:00"></option>
+</datalist>
+
+<datalist id="businesslist">
+<option value="納品"></option>
+<option value="レンタル"></option>
+<option value="デモ"></option>
+<option value="商品紹介"></option>
+<option value="その他"></option>
+</datalist>
+
+</div>
